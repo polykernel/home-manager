@@ -99,29 +99,30 @@ in {
     ];
 
     systemd.user = {
-      services = mkIf (config.home.keyboard != null) {
-        setxkbmap = {
-          Unit = {
-            Description = "Set up keyboard in X";
-            After = [ "graphical-session-pre.target" ];
-            PartOf = [ "graphical-session.target" ];
-          };
+      services =
+        mkIf (config.home.keyboard != null && config.home.keyboard != { }) {
+          setxkbmap = {
+            Unit = {
+              Description = "Set up keyboard in X";
+              After = [ "graphical-session-pre.target" ];
+              PartOf = [ "graphical-session.target" ];
+            };
 
-          Install = { WantedBy = [ "graphical-session.target" ]; };
+            Install = { WantedBy = [ "graphical-session.target" ]; };
 
-          Service = {
-            Type = "oneshot";
-            RemainAfterExit = true;
-            ExecStart = with config.home.keyboard;
-              let
-                args = optional (layout != null) "-layout '${layout}'"
-                  ++ optional (variant != null) "-variant '${variant}'"
-                  ++ optional (model != null) "-model '${model}'"
-                  ++ [ "-option ''" ] ++ map (v: "-option '${v}'") options;
-              in "${pkgs.xorg.setxkbmap}/bin/setxkbmap ${toString args}";
+            Service = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = with config.home.keyboard;
+                let
+                  args = optional (layout != null) "-layout '${layout}'"
+                    ++ optional (variant != null) "-variant '${variant}'"
+                    ++ optional (model != null) "-model '${model}'"
+                    ++ [ "-option ''" ] ++ map (v: "-option '${v}'") options;
+                in "${pkgs.xorg.setxkbmap}/bin/setxkbmap ${toString args}";
+            };
           };
         };
-      };
 
       targets = {
         # A basic graphical session target for Home Manager.
